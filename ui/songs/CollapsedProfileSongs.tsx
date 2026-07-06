@@ -6,6 +6,7 @@
 
 import { BaseText } from "@components/index";
 import { classes } from "@utils/index";
+import { User } from "@vencord/discord-types";
 import {
     SelectedChannelStore,
     SelectedGuildStore,
@@ -14,18 +15,19 @@ import {
     UserProfileActions,
     useState,
 } from "@webpack/common";
+
 import { RenderSongInfo } from "../../api/dist/handlers";
 import { UserData } from "../../api/dist/structs";
 import { sid } from "../../api/dist/util";
 import { Native } from "../../service";
-import { ContainerClasses, DMSideBarClasses, OverlayClasses, ProfileCardClasses, Spinner } from "../../ui/common";
-
-import { ProfileSongsProps } from "./ProfileSongs";
+import { ContainerClasses, DMSideBarClasses, OverlayClasses, ProfileCardClasses, Spinner } from "../common";
 
 const shownSongs = 4;
 
-interface CollapsedProfileSongsProps extends ProfileSongsProps {
+interface CollapsedProfileSongsProps {
     data?: UserData;
+    user: User;
+    isSideBar: boolean;
 }
 
 export default function CollapsedProfileSongs({ data, user, isSideBar }: CollapsedProfileSongsProps) {

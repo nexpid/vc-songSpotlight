@@ -6,6 +6,7 @@
 
 import { showToast, Toasts, useCallback, useEffect, useMemo, useRef } from "@webpack/common";
 import { RefObject } from "react";
+
 import { RenderInfoEntry } from "../../api/dist/handlers";
 import { logger } from "../../lib/utils";
 

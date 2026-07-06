@@ -6,6 +6,7 @@
 
 import { PluginNative } from "@utils/types";
 import { useEffect, useState } from "@webpack/common";
+
 import { RenderSongInfo } from "./api/dist/handlers";
 import { Song } from "./api/dist/structs";
 import { sid } from "./api/dist/util";

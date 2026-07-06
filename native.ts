@@ -6,6 +6,7 @@
 
 import { ConnectSrc, CspPolicies, ImageSrc } from "@main/csp";
 import { type IpcMainInvokeEvent, net } from "electron";
+
 import * as handlers from "./api/dist/handlers";
 import type { Song } from "./api/dist/structs";
 import { setFetchHandler } from "./api/dist/util";

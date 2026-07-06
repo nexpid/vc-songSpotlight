@@ -9,8 +9,9 @@ import { Button } from "@components/Button";
 import ErrorBoundary from "@components/ErrorBoundary";
 import { Flex } from "@components/Flex";
 import { copyWithToast } from "@utils/discord";
-import { ModalContent, ModalHeader, ModalProps, ModalRoot, ModalSize, openModal } from "@utils/modal";
-import { Alerts, Parser, showToast, Toasts, useCallback, useEffect, useMemo, useRef, useState } from "@webpack/common";
+import { RenderModalProps } from "@vencord/discord-types";
+import { Alerts, Modal, openModal, Parser, showToast, Toasts, useCallback, useEffect, useMemo, useRef, useState } from "@webpack/common";
+
 import { services } from "../../api/dist/handlers";
 import { UserData } from "../../api/dist/structs";
 import { sid } from "../../api/dist/util";
@@ -21,8 +22,8 @@ import { useSongStore } from "../../lib/stores/SongStore";
 import { cl } from "../../lib/utils";
 import { readClipboard } from "../../polyfill";
 import { Native } from "../../service";
-import { Spinner } from "../../ui/common";
-import SongList from "../../ui/settings/SongList";
+import { Spinner } from "../common";
+import SongList from "./SongList";
 
 interface ImportButtonProps {
     overwrite: boolean;
@@ -233,19 +234,14 @@ export default function Settings({ templateData }: SettingsProps) {
     );
 }
 
-export function SettingsModal({ modalProps, ...props }: SettingsProps & { modalProps: ModalProps }) {
+export function SettingsModal({ modalProps, ...props }: SettingsProps & { modalProps: RenderModalProps; }) {
     return (
         <ErrorBoundary>
-            <ModalRoot {...modalProps} size={ModalSize.LARGE}>
-                <ModalHeader>
-                    <BaseText size="xl" weight="bold">Song Spotlight</BaseText>
-                </ModalHeader>
-                <ModalContent>
-                    <div style={{ marginBottom: "20px" }}>
-                        <Settings {...props} />
-                    </div>
-                </ModalContent>
-            </ModalRoot>
+            <Modal {...modalProps} size="lg" title="Song Spotlight">
+                <div style={{ marginBottom: "20px" }}>
+                    <Settings {...props} />
+                </div>
+            </Modal>
         </ErrorBoundary>
     );
 }

@@ -6,8 +6,8 @@
 
 import { proxyLazy } from "@utils/lazy";
 import { UserStore, zustandCreate } from "@webpack/common";
-import type { UserData } from "../../api/dist/structs";
 
+import type { UserData } from "../../api/dist/structs";
 import { ZustandDefinition, ZustandStore } from "./zustand";
 
 interface Data {

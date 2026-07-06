@@ -11,14 +11,14 @@ import { classes } from "@utils/misc";
 import { User } from "@vencord/discord-types";
 import { React, ScrollerThin, useEffect, UserStore, useState } from "@webpack/common";
 import { JSX } from "react";
+
 import { sid } from "../../api/dist/util";
 import { listData } from "../../lib/api";
 import { useAuthorizationStore } from "../../lib/stores/AuthorizationStore";
 import { useSongStore } from "../../lib/stores/SongStore";
 import { cl } from "../../lib/utils";
-import { Spinner, WidgetClasses } from "../../ui/common";
-import { openSettingsModal } from "../../ui/settings";
-
+import { Spinner, WidgetClasses } from "../common";
+import { openSettingsModal } from "../settings";
 import Song from ".";
 
 interface WidgetSongsProps {

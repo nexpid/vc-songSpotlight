@@ -22,29 +22,33 @@ import {
     UserStore,
     useState,
 } from "@webpack/common";
+
 import { sid } from "../../api/dist/util";
 import { listData } from "../../lib/api";
 import { useAuthorizationStore } from "../../lib/stores/AuthorizationStore";
 import { useSongStore } from "../../lib/stores/SongStore";
 import { cl } from "../../lib/utils";
 import settings from "../../settings";
-import { CardClasses, MoreHorizontalIcon, OverlayClasses, Spinner } from "../../ui/common";
-import { openSettingsModal } from "../../ui/settings";
-
+import { CardClasses, MoreHorizontalIcon, OverlayClasses, Spinner } from "../common";
+import { openSettingsModal } from "../settings";
 import Song from ".";
 import CollapsedProfileSongs from "./CollapsedProfileSongs";
 
-export interface ProfileSongsProps {
-    user: User;
+interface ProfileSongsProps {
+    user?: User;
+    currentUser?: User;
     isSideBar: boolean;
 }
 
-export default function ProfileSongs({ user, isSideBar }: ProfileSongsProps) {
+export default function ProfileSongs({ user: _user, currentUser, isSideBar }: ProfileSongsProps) {
+    const user = _user ?? currentUser;
+    if (!user) throw new Error("Missing user");
+
     const [failed, setFailed] = useState(false);
     const { isAuthorized } = useAuthorizationStore();
     const { users } = useSongStore();
     const { profileSongsLimit, collapseSongList } = settings.use();
-    const userId = user?.id;
+    const userId = user.id;
     const data = users[userId]?.data;
     useEffect(() => {
         if (isAuthorized() && !data) listData(userId).catch(() => setFailed(true));

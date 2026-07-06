@@ -21,14 +21,15 @@ import {
     useState,
 } from "@webpack/common";
 import { DragEvent } from "react";
+
 import { Song, UserData } from "../../api/dist/structs";
 import { sid } from "../../api/dist/util";
 import { apiConstants } from "../../lib/api";
 import { cl } from "../../lib/utils";
 import { useRender } from "../../service";
-import { TrashIcon } from "../../ui/common";
-import ServiceIcon from "../../ui/components/ServiceIcon";
-import AddSong from "../../ui/settings/AddSong";
+import { TrashIcon } from "../common";
+import ServiceIcon from "../components/ServiceIcon";
+import AddSong from "./AddSong";
 
 interface EditableSongProps {
     song: Song;

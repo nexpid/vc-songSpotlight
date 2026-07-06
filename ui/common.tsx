@@ -9,6 +9,7 @@ import { classes } from "@utils/index";
 import { findByCodeLazy, findCssClassesLazy } from "@webpack";
 import { Tooltip } from "@webpack/common";
 import { ComponentType, HTMLAttributes, JSX } from "react";
+
 import { cl } from "../lib/utils";
 
 export const OverlayClasses = findCssClassesLazy("overlay", "inner", "outer");

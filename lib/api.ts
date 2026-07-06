@@ -5,8 +5,8 @@
  */
 
 import { showToast, Toasts, UserStore } from "@webpack/common";
-import type { UserData } from "../api/dist/structs";
 
+import type { UserData } from "../api/dist/structs";
 import { useAuthorizationStore } from "./stores/AuthorizationStore";
 import { useSongStore } from "./stores/SongStore";
 

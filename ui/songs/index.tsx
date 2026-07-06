@@ -25,6 +25,7 @@ import {
     useRef,
     useState,
 } from "@webpack/common";
+
 import { RenderInfoEntryBased, RenderSongInfo } from "../../api/dist/handlers";
 import { Song as SongType } from "../../api/dist/structs";
 import { isListLayout, sid } from "../../api/dist/util";
@@ -40,11 +41,11 @@ import {
     PlayButton,
     PuzzlePieceIcon,
     TrashIcon,
-} from "../../ui/common";
-import AudioPlayer from "../../ui/components/AudioPlayer";
-import ProgressCircle from "../../ui/components/ProgressCircle";
-import ServiceIcon from "../../ui/components/ServiceIcon";
-import { openSettingsModal } from "../../ui/settings";
+} from "../common";
+import AudioPlayer from "../components/AudioPlayer";
+import ProgressCircle from "../components/ProgressCircle";
+import ServiceIcon from "../components/ServiceIcon";
+import { openSettingsModal } from "../settings";
 
 interface SongEntryProps {
     entry: RenderInfoEntryBased;

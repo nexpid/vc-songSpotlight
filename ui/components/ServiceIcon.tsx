@@ -6,9 +6,10 @@
 
 import { Tooltip, useMemo } from "@webpack/common";
 import { JSX } from "react";
+
 import { getServiceLabel } from "../../api/dist/util";
 import { cl } from "../../lib/utils";
-import { AppleMusicIcon, SoundcloudIcon, SpotifyIcon, TidalIcon } from "../../ui/common";
+import { AppleMusicIcon, SoundcloudIcon, SpotifyIcon, TidalIcon } from "../common";
 
 const serviceIcons = {
     applemusic: AppleMusicIcon,
