@@ -21,12 +21,13 @@ import {
     Toasts,
     Tooltip,
     useCallback,
+    useEffect,
     useMemo,
     useRef,
     useState,
 } from "@webpack/common";
 
-import { RenderInfoEntryBased, RenderSongInfo } from "../../api/dist/handlers";
+import { RenderInfoEntry, RenderInfoEntryBased, RenderSongInfo } from "../../api/dist/handlers";
 import { Song as SongType } from "../../api/dist/structs";
 import { isListLayout, sid } from "../../api/dist/util";
 import { apiConstants } from "../../lib/api";
@@ -138,7 +139,8 @@ function SongInfo({ owned, song, render, big }: SongInfoProps) {
     const [playing, setPlaying] = useState<number | false>(false);
     const [loaded, setLoaded] = useState(new Set<number>());
     const audios = useMemo(() => render.form === "single" ? [render.single] : render.list, [render]);
-    const audioRef = useRef<HTMLAudioElement>(undefined);
+    const audioRef = useRef<HTMLAudioElement>();
+    const playingRef = useRef<RenderInfoEntry | undefined>();
     const duration = useMemo(
         () => {
             if (playing !== false) {
@@ -149,6 +151,10 @@ function SongInfo({ owned, song, render, big }: SongInfoProps) {
         },
         [playing, render],
     );
+
+    useEffect(() => {
+        playingRef.current = playing ? audios[playing] : undefined;
+    }, [playing, render]);
 
     const setLoadedAudio = useCallback((index: number, state: boolean) =>
         setLoaded(ld => {
@@ -284,6 +290,7 @@ function SongInfo({ owned, song, render, big }: SongInfoProps) {
                     <div className={cl("song-progress-container")}>
                         <ProgressCircle
                             border={2}
+                            playingRef={playingRef}
                             audioRef={audioRef}
                             className={cl("song-progress")}
                         />
