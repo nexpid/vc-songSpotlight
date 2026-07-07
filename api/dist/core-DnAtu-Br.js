@@ -1,7 +1,12 @@
-import { c as request, o as PLAYLIST_LIMIT, r as parseLink, s as parseNextData, t as $ } from "./finders-DqxDg0Cd.js";
-
+import { l as parseNextData, r as parseLink, t as $, u as request } from "./finders-DMIy0HfJ.js";
 //#region src/handlers/defs/parsers/songdotlink.ts
 const alphabeticRegex = /^[^-_][a-z0-9-_]+[^-_]$/i;
+const platforms = [
+	"spotify",
+	"soundcloud",
+	"appleMusic",
+	"tidal"
+];
 const songdotlink = {
 	name: "song.link",
 	label: "song.link",
@@ -23,12 +28,16 @@ const songdotlink = {
 		const sections = parseNextData(html)?.props?.pageProps?.pageData?.sections;
 		if (!sections) return null;
 		const links = sections.flatMap((x) => x.links ?? []).filter((x) => x.url && x.platform);
-		const valid = links.find((x) => x.platform === "spotify") ?? links.find((x) => x.platform === "soundcloud") ?? links.find((x) => x.platform === "appleMusic") ?? links.find((x) => x.platform === "tidal");
-		if (!valid) return null;
-		return await parseLink(valid.url);
+		for (const platform of platforms) {
+			const link = links.find((x) => x.platform === platform);
+			if (link) {
+				const parsed = await parseLink(link.url);
+				if (parsed) return parsed;
+			}
+		}
+		return null;
 	}
 };
-
 //#endregion
 //#region src/handlers/defs/cache.ts
 const handlerCache = /* @__PURE__ */ new Map();
@@ -46,7 +55,6 @@ function makeCache(name, retrieve) {
 		}
 	} };
 }
-
 //#endregion
 //#region src/handlers/defs/services/applemusic.ts
 const geo = "us", defaultName = "songspotlight";
@@ -119,7 +127,7 @@ const applemusic = {
 			form: "list",
 			...base,
 			thumbnailUrl,
-			list: (relationships.tracks?.data ?? relationships.songs?.data ?? []).slice(0, PLAYLIST_LIMIT).map(({ attributes }) => {
+			list: (relationships.tracks?.data ?? relationships.songs?.data ?? []).slice(0, 15).map(({ attributes }) => {
 				const duration = attributes.durationInMillis, previewUrl = attributes.previews?.[0]?.url;
 				return {
 					label: attributes.name,
@@ -138,7 +146,6 @@ const applemusic = {
 		return (await request({ url: applemusicLink(type, id) })).status === 200;
 	}
 };
-
 //#endregion
 //#region src/handlers/defs/services/soundcloud.ts
 const client_id = "nIjtjiYnjkOhMyh5xrbqEW12DxeJVnic";
@@ -148,16 +155,19 @@ async function parseWidget(type, id, tracks) {
 		query: {
 			format: "json",
 			client_id,
-			app_version: "1768986291",
+			app_version: "1782997503",
 			limit: "20"
 		}
 	})).json;
 }
+function filterPreview(track) {
+	return track.format.protocol === "progressive" && track.format.mime_type === "audio/mpeg" && track?.url && track?.duration;
+}
+const previewPoint = .4;
+const previewDuration = 25e3;
 async function parsePreview(transcodings) {
 	const preview = transcodings.sort((a, b) => {
-		const isA = a.format.protocol === "progressive";
-		const isB = b.format.protocol === "progressive";
-		return isA && !isB ? -1 : isB && !isA ? 1 : 0;
+		return +filterPreview(b) - +filterPreview(a);
 	})?.[0];
 	if (preview?.url && preview?.duration) {
 		const link = (await request({
@@ -165,10 +175,28 @@ async function parsePreview(transcodings) {
 			query: { client_id }
 		})).json;
 		if (!link?.url) return;
-		return {
+		if (preview.duration >= 1e3) {
+			const previewChunk = Math.min(previewDuration, preview.duration);
+			const previewStart = Math.ceil(preview.duration * previewPoint - previewChunk / 2);
+			return {
+				duration: preview.duration,
+				previewUrl: link.url,
+				previewStart,
+				previewSlice: Math.min(previewChunk, preview.duration - previewStart)
+			};
+		} else return {
 			duration: preview.duration,
 			previewUrl: link.url
 		};
+	}
+}
+function extractExpiry$1(url) {
+	try {
+		const policy = new URL(url).searchParams.get("Policy");
+		if (!policy) return void 0;
+		return JSON.parse(atob(policy.replace(/_/g, "="))).Statement[0].Condition.DateLessThan["AWS:EpochTime"] * 1e3;
+	} catch {
+		return;
 	}
 }
 const soundcloud = {
@@ -232,7 +260,8 @@ const soundcloud = {
 				form: "single",
 				...base,
 				thumbnailUrl,
-				single: { audio }
+				single: { audio },
+				expiresAt: audio ? extractExpiry$1(audio.previewUrl) : void 0
 			};
 		} else {
 			let tracks = [];
@@ -240,17 +269,20 @@ const soundcloud = {
 				const got = await parseWidget(type, id, true).catch(() => void 0);
 				if (got?.collection) tracks = got.collection;
 			} else if (data.tracks) tracks = data.tracks;
+			const list = await Promise.all(tracks.filter((x) => x.title).slice(0, 15).map(async (track) => ({
+				label: track.title,
+				sublabel: track.user?.username ?? "unknown",
+				link: track.permalink_url,
+				explicit: Boolean(track.publisher_metadata.explicit),
+				audio: await parsePreview(track.media?.transcodings ?? []).catch(() => void 0)
+			})));
+			const expires = list.map(({ audio }) => audio ? extractExpiry$1(audio.previewUrl) : void 0).filter((x) => typeof x === "number");
 			return {
 				form: "list",
 				...base,
 				thumbnailUrl,
-				list: await Promise.all(tracks.filter((x) => x.title).slice(0, PLAYLIST_LIMIT).map(async (track) => ({
-					label: track.title,
-					sublabel: track.user?.username ?? "unknown",
-					link: track.permalink_url,
-					explicit: Boolean(track.publisher_metadata.explicit),
-					audio: await parsePreview(track.media?.transcodings ?? []).catch(() => void 0)
-				})))
+				list,
+				expiresAt: expires[0] ? Math.min(...expires) : void 0
 			};
 		}
 	},
@@ -258,7 +290,6 @@ const soundcloud = {
 		return (await parseWidget(type, id, false))?.id !== void 0;
 	}
 };
-
 //#endregion
 //#region src/handlers/defs/services/spotify.ts
 async function parseEmbed(type, id) {
@@ -312,7 +343,7 @@ const spotify = {
 			form: "list",
 			...base,
 			thumbnailUrl,
-			list: (data.trackList ?? []).slice(0, PLAYLIST_LIMIT).map((track) => ({
+			list: (data.trackList ?? []).slice(0, 15).map((track) => ({
 				label: track.title,
 				sublabel: track.subtitle ?? track.artists?.map((x) => x.name).join(", "),
 				link: fromUri(track.uri),
@@ -328,7 +359,6 @@ const spotify = {
 		return !(await parseEmbed(type, id))?.props?.pageProps?.title;
 	}
 };
-
 //#endregion
 //#region src/handlers/defs/services/tidal.ts
 const tidalToken = "vNVdglQOjFJJGG2U";
@@ -360,63 +390,76 @@ function prettyLink(link) {
 		return link;
 	}
 }
-const tidal = {
-	name: "tidal",
-	label: "Tidal",
-	hosts: [
-		"tidal.com",
-		"www.tidal.com",
-		"listen.tidal.com"
-	],
-	types: [
-		"artist",
-		"album",
-		"playlist",
-		"track"
-	],
-	async parse(_link, _host, path) {
-		const [typeFoo, idFoo, typeBar, idBar] = path;
-		const type = typeBar && idBar ? typeBar : typeFoo, id = typeBar && idBar ? idBar : idFoo;
-		if (!type || !this.types.includes(type) || !id) return null;
-		if (type === "playlist" && !/^[-a-f0-9]+$/.test(id)) return null;
-		else if (type !== "playlist" && Number.isNaN(Number(id))) return null;
-		if (!await this.validate(type, id)) return null;
-		return {
-			service: this.name,
-			type,
-			id
-		};
-	},
-	async render(type, id) {
-		const data = await getInfo(type, id);
-		if (!data) return null;
-		const defaultSublabel = data.type === "playlist" ? "TIDAL" : "Top tracks";
-		const base = {
-			label: data.title || data.name || "Unknown",
-			sublabel: data.artists?.map((x) => x.name).join(", ") || data.creator?.name || defaultSublabel,
-			link: prettyLink(data.url),
-			explicit: Boolean(data.explicit)
-		};
-		const thumbnailKey = data.picture ?? data.squareImage ?? data.album?.cover;
-		const thumbnailUrl = thumbnailKey ? `https://resources.tidal.com/images/${thumbnailKey.replace(/-/g, "/")}/160x160.jpg` : void 0;
-		if (type === "track") {
-			const previewUrl = data.duration && await getAudioPreview(id).catch(() => void 0);
+function extractExpiry(url) {
+	try {
+		const token = new URL(url).searchParams.get("token");
+		if (!token) return void 0;
+		const timestamp = Number(token.split("~")[0]);
+		return !Number.isNaN(timestamp) ? timestamp * 1e3 : void 0;
+	} catch {
+		return;
+	}
+}
+//#endregion
+//#region src/handlers/core.ts
+const services = [
+	applemusic,
+	soundcloud,
+	spotify,
+	{
+		name: "tidal",
+		label: "Tidal",
+		hosts: [
+			"tidal.com",
+			"www.tidal.com",
+			"listen.tidal.com"
+		],
+		types: [
+			"artist",
+			"album",
+			"playlist",
+			"track"
+		],
+		async parse(_link, _host, path) {
+			const [typeFoo, idFoo, typeBar, idBar] = path;
+			const type = typeBar && idBar ? typeBar : typeFoo, id = typeBar && idBar ? idBar : idFoo;
+			if (!type || !this.types.includes(type) || !id) return null;
+			if (type === "playlist" && !/^[-a-f0-9]+$/.test(id)) return null;
+			else if (type !== "playlist" && Number.isNaN(Number(id))) return null;
+			if (!await this.validate(type, id)) return null;
 			return {
-				form: "single",
-				...base,
-				thumbnailUrl,
-				single: { audio: previewUrl && data.duration ? {
-					previewUrl,
-					duration: data.duration * 1e3
-				} : void 0 }
+				service: this.name,
+				type,
+				id
 			};
-		} else {
-			const tracks = await getInfo(type, id, type === "artist" ? "toptracks" : "tracks", { limit: String(PLAYLIST_LIMIT) });
-			return {
-				form: "list",
-				...base,
-				thumbnailUrl,
-				list: await Promise.all(tracks?.items.slice(0, PLAYLIST_LIMIT).map(async (track) => {
+		},
+		async render(type, id) {
+			const data = await getInfo(type, id);
+			if (!data) return null;
+			const defaultSublabel = data.type === "playlist" ? "TIDAL" : "Top tracks";
+			const base = {
+				label: data.title || data.name || "Unknown",
+				sublabel: data.artists?.map((x) => x.name).join(", ") || data.creator?.name || defaultSublabel,
+				link: prettyLink(data.url),
+				explicit: Boolean(data.explicit)
+			};
+			const thumbnailKey = data.picture ?? data.squareImage ?? data.cover;
+			const thumbnailUrl = thumbnailKey ? `https://resources.tidal.com/images/${thumbnailKey.replace(/-/g, "/")}/160x160.jpg` : void 0;
+			if (type === "track") {
+				const previewUrl = data.duration && await getAudioPreview(id).catch(() => void 0);
+				return {
+					form: "single",
+					...base,
+					thumbnailUrl,
+					single: { audio: previewUrl && data.duration ? {
+						previewUrl,
+						duration: data.duration * 1e3
+					} : void 0 },
+					expiresAt: previewUrl ? extractExpiry(previewUrl) : void 0
+				};
+			} else {
+				const tracks = await getInfo(type, id, type === "artist" ? "toptracks" : "tracks", { limit: String(15) });
+				const list = await Promise.all(tracks?.items.slice(0, 15).map(async (track) => {
 					const previewUrl = track.duration && await getAudioPreview(track.id).catch(() => void 0);
 					return {
 						label: track.title,
@@ -428,26 +471,24 @@ const tidal = {
 							duration: track.duration * 1e3
 						} : void 0
 					};
-				}) ?? [])
-			};
+				}) ?? []);
+				const expires = list.map(({ audio }) => audio ? extractExpiry(audio.previewUrl) : void 0).filter((x) => typeof x === "number");
+				return {
+					form: "list",
+					...base,
+					thumbnailUrl,
+					list,
+					expiresAt: expires[0] ? Math.min(...expires) : void 0
+				};
+			}
+		},
+		async validate(type, id) {
+			return !!await getInfo(type, id);
 		}
-	},
-	async validate(type, id) {
-		return !!await getInfo(type, id);
 	}
-};
-
-//#endregion
-//#region src/handlers/core.ts
-const services = [
-	applemusic,
-	soundcloud,
-	spotify,
-	tidal
 ];
 $.services = services;
 const parsers = [songdotlink, ...services];
 $.parsers = parsers;
-
 //#endregion
 export { services as n, parsers as t };

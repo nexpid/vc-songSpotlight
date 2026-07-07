@@ -1,8 +1,5 @@
-import { sid } from "./util.js";
-
 //#region package.json
-var version = "2.1.3";
-
+var version = "2.1.4";
 //#endregion
 //#region src/handlers/common.ts
 function clean(link) {
@@ -74,8 +71,42 @@ function parseNextData(html) {
 		return;
 	}
 }
-const PLAYLIST_LIMIT = 15;
-
+//#endregion
+//#region src/util.ts
+/**
+* Returns whether the specified **Song** should have a tall layout (for **playlists**, **albums** and **artists**) or a short layout (for **tracks**).
+* @example ```ts
+* isListLayout({ service: "soundcloud", type: "user", id: "914653456" });
+* // true
+* ```
+*/
+function isListLayout(song, render) {
+	return render?.form === "list" || !["track", "song"].includes(song.type);
+}
+/**
+* Loops through all **services** and returns the corresponding **service**'s label.
+* @example ```ts
+* getServiceLabel("applemusic");
+* // "Apple Music"
+* ```
+*/
+function getServiceLabel(service) {
+	for (const serviced of $.services) if (serviced.name === service) return serviced.label;
+}
+/**
+* Helper function which stringifies a **Song**, useful for caching or for using as keys.
+* @example ```ts
+* sid({ service: "soundcloud", type: "user", id: "914653456" });
+* // "soundcloud:user:914653456"
+* ```
+*/
+function sid(song) {
+	return [
+		song.service,
+		song.type,
+		song.id
+	].join(":");
+}
 //#endregion
 //#region src/handlers/finders.ts
 const $ = {
@@ -115,7 +146,8 @@ const renderCache = /* @__PURE__ */ new Map();
 */
 async function renderSong(song) {
 	const id = sid(song);
-	if (renderCache.has(id)) return renderCache.get(id);
+	const cached = renderCache.get(id);
+	if (cached !== void 0 && (!cached?.expiresAt || cached.expiresAt > Date.now())) return cached;
 	let info = null;
 	const service = $.services.find((x) => x.name === song.service);
 	if (service?.types.includes(song.type)) info = await service.render(song.type, song.id);
@@ -145,6 +177,5 @@ function clearCache() {
 	renderCache.clear();
 	validateCache.clear();
 }
-
 //#endregion
-export { validateSong as a, request as c, renderSong as i, setFetchHandler as l, clearCache as n, PLAYLIST_LIMIT as o, parseLink as r, parseNextData as s, $ as t };
+export { validateSong as a, sid as c, setFetchHandler as d, renderSong as i, parseNextData as l, clearCache as n, getServiceLabel as o, parseLink as r, isListLayout as s, $ as t, request as u };

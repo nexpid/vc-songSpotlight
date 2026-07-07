@@ -1,6 +1,5 @@
-import { t as Song } from "./types-DRQ6d925.js";
+import { t as Song } from "./types-Su1xQmju.js";
 import { RenderSongInfo } from "@song-spotlight/api/handlers";
-
 //#region src/handlers/common.d.ts
 /**
  * Lets you to set a custom `fetch()` function. Useful for passing requests through Electron's [net.fetch](https://www.electronjs.org/docs/latest/api/net#netfetchinput-init) for example.

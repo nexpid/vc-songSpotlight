@@ -1,5 +1,4 @@
-import { t as Song } from "./types-DRQ6d925.js";
-
+import { t as Song } from "./types-Su1xQmju.js";
 //#region src/handlers/helpers.d.ts
 type MaybePromise<T> = Promise<T> | T;
 interface SongParser {
@@ -18,11 +17,14 @@ interface RenderInfoBase {
   sublabel: string;
   explicit: boolean;
   link: string;
+  expiresAt?: number;
 }
 interface RenderInfoEntry {
   audio?: {
     duration: number;
     previewUrl: string;
+    previewStart?: number;
+    previewSlice?: number;
   };
 }
 type RenderInfoEntryBased = RenderInfoEntry & RenderInfoBase;
