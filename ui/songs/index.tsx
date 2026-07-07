@@ -153,7 +153,7 @@ function SongInfo({ owned, song, render, big }: SongInfoProps) {
     );
 
     useEffect(() => {
-        playingRef.current = playing ? audios[playing] : undefined;
+        playingRef.current = playing !== false ? audios[playing] : undefined;
     }, [playing, render]);
 
     const setLoadedAudio = useCallback((index: number, state: boolean) =>
