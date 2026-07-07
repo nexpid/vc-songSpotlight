@@ -139,8 +139,8 @@ function SongInfo({ owned, song, render, big }: SongInfoProps) {
     const [playing, setPlaying] = useState<number | false>(false);
     const [loaded, setLoaded] = useState(new Set<number>());
     const audios = useMemo(() => render.form === "single" ? [render.single] : render.list, [render]);
-    const audioRef = useRef<HTMLAudioElement>();
-    const playingRef = useRef<RenderInfoEntry | undefined>();
+    const audioRef = useRef<HTMLAudioElement>(undefined);
+    const playingRef = useRef<RenderInfoEntry>(undefined);
     const duration = useMemo(
         () => {
             if (playing !== false) {
