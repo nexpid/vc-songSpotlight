@@ -1,4 +1,4 @@
-import { n as services } from "./core-DnAtu-Br.js";
+import { n as services } from "./core-D9kSOO4F.js";
 import z from "zod";
 //#region src/structs/zod.ts
 const SongSchema = z.discriminatedUnion("service", services.map((service) => z.object({

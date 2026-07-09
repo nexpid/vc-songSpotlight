@@ -1,5 +1,5 @@
 //#region package.json
-var version = "2.1.4";
+var version = "2.2.0";
 //#endregion
 //#region src/handlers/common.ts
 function clean(link) {

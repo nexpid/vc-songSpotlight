@@ -1,4 +1,4 @@
-import { l as parseNextData, r as parseLink, t as $, u as request } from "./finders-DMIy0HfJ.js";
+import { l as parseNextData, r as parseLink, t as $, u as request } from "./finders-B7F6qUME.js";
 //#region src/handlers/defs/parsers/songdotlink.ts
 const alphabeticRegex = /^[^-_][a-z0-9-_]+[^-_]$/i;
 const platforms = [
@@ -57,7 +57,8 @@ function makeCache(name, retrieve) {
 }
 //#endregion
 //#region src/handlers/defs/services/applemusic.ts
-const geo = "us", defaultName = "songspotlight";
+const geo = "us";
+const defaultName = "songspotlight";
 function applemusicLink(type, id) {
 	return `https://music.apple.com/${geo}/${type}/${defaultName}/${id}`;
 }
@@ -149,14 +150,28 @@ const applemusic = {
 //#endregion
 //#region src/handlers/defs/services/soundcloud.ts
 const client_id = "nIjtjiYnjkOhMyh5xrbqEW12DxeJVnic";
+const app_version = "1782997503";
 async function parseWidget(type, id, tracks) {
 	return (await request({
 		url: `https://api-widget.soundcloud.com/${type}s/${id}${tracks ? "/tracks" : ""}`,
 		query: {
 			format: "json",
+			limit: "20",
 			client_id,
-			app_version: "1782997503",
-			limit: "20"
+			app_version
+		}
+	})).json;
+}
+async function parsePlaylistTracks(playlistId, trackIds) {
+	return (await request({
+		url: `https://api-widget.soundcloud.com/tracks`,
+		query: {
+			ids: trackIds.join(","),
+			playlistId,
+			playlistSecretToken: "",
+			format: "json",
+			client_id,
+			app_version
 		}
 	})).json;
 }
@@ -164,7 +179,7 @@ function filterPreview(track) {
 	return track.format.protocol === "progressive" && track.format.mime_type === "audio/mpeg" && track?.url && track?.duration;
 }
 const previewPoint = .4;
-const previewDuration = 25e3;
+const previewDuration = 3e4;
 async function parsePreview(transcodings) {
 	const preview = transcodings.sort((a, b) => {
 		return +filterPreview(b) - +filterPreview(a);
@@ -177,7 +192,7 @@ async function parsePreview(transcodings) {
 		if (!link?.url) return;
 		if (preview.duration >= 1e3) {
 			const previewChunk = Math.min(previewDuration, preview.duration);
-			const previewStart = Math.ceil(preview.duration * previewPoint - previewChunk / 2);
+			const previewStart = Math.ceil(preview.duration * previewPoint);
 			return {
 				duration: preview.duration,
 				previewUrl: link.url,
@@ -245,7 +260,7 @@ const soundcloud = {
 		}
 	},
 	async render(type, id) {
-		const data = await parseWidget(type, id, false);
+		const data = await parseWidget(type, id);
 		if (!data?.id) return null;
 		const base = {
 			label: data.title ?? data.username,
@@ -268,8 +283,16 @@ const soundcloud = {
 			if (type === "user") {
 				const got = await parseWidget(type, id, true).catch(() => void 0);
 				if (got?.collection) tracks = got.collection;
-			} else if (data.tracks) tracks = data.tracks;
-			const list = await Promise.all(tracks.filter((x) => x.title).slice(0, 15).map(async (track) => ({
+			} else if (data.tracks) {
+				tracks = data.tracks;
+				const missingIds = tracks.filter((x) => x.policy === "ALLOW" && !x.uri).map((x) => x.id).slice(0, 15);
+				const retrieved = missingIds.length >= 1 && await parsePlaylistTracks(id, missingIds);
+				if (retrieved) for (let i = 0; i < tracks.length; i++) {
+					const replaced = retrieved.find((x) => x.id === tracks[i]?.id);
+					if (replaced) tracks[i] = replaced;
+				}
+			}
+			const list = await Promise.all(tracks.filter((x) => x.uri).slice(0, 15).map(async (track) => ({
 				label: track.title,
 				sublabel: track.user?.username ?? "unknown",
 				link: track.permalink_url,
@@ -287,7 +310,7 @@ const soundcloud = {
 		}
 	},
 	async validate(type, id) {
-		return (await parseWidget(type, id, false))?.id !== void 0;
+		return (await parseWidget(type, id))?.id !== void 0;
 	}
 };
 //#endregion

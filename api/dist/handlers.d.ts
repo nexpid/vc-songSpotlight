@@ -19,13 +19,14 @@ interface RenderInfoBase {
   link: string;
   expiresAt?: number;
 }
+interface RenderInfoEntryAudio {
+  duration: number;
+  previewUrl: string;
+  previewStart?: number;
+  previewSlice?: number;
+}
 interface RenderInfoEntry {
-  audio?: {
-    duration: number;
-    previewUrl: string;
-    previewStart?: number;
-    previewSlice?: number;
-  };
+  audio?: RenderInfoEntryAudio;
 }
 type RenderInfoEntryBased = RenderInfoEntry & RenderInfoBase;
 interface RenderSongSingle extends RenderInfoBase {
@@ -76,4 +77,4 @@ declare function validateSong(song: Song): Promise<boolean>;
 /** Clears the cache for all handler functions */
 declare function clearCache(): void;
 //#endregion
-export { $, RenderInfoBase, RenderInfoEntry, RenderInfoEntryBased, RenderSongInfo, SongParser, SongService, clearCache, parseLink, parsers, renderSong, services, validateSong };
+export { $, RenderInfoBase, RenderInfoEntry, RenderInfoEntryAudio, RenderInfoEntryBased, RenderSongInfo, SongParser, SongService, clearCache, parseLink, parsers, renderSong, services, validateSong };
