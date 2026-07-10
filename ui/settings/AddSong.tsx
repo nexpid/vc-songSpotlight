@@ -60,8 +60,8 @@ function AddSongModal({ modalProps, close, onAdd }: AddSongModalProps) {
                                 setError("Failed to parse link");
                                 setPending(false);
                             }
-                        }
-                    }
+                        },
+                    },
                 ]}
             >
                 <Flex flexDirection="column" gap="10px">

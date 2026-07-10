@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
-import { classNameFactory } from "@utils/css";
 import { Logger } from "@utils/Logger";
+import { classNameFactory } from "@utils/css";
 
 import { RenderSongInfo } from "../api/dist/handlers";
 import type { Song } from "../api/dist/structs";

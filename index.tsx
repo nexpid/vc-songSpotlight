@@ -11,7 +11,6 @@ import definePlugin from "@utils/types";
 
 import { useAuthorizationStore } from "./lib/stores/AuthorizationStore";
 import { useSongStore } from "./lib/stores/SongStore";
-import { Native } from "./service";
 import settings from "./settings";
 import ProfileSongs from "./ui/songs/ProfileSongs";
 import WidgetSongs from "./ui/songs/WidgetSongs";
@@ -30,24 +29,24 @@ export default definePlugin({
         {
             find: '"UserProfileAccountPopout"',
             replacement: {
-                match: /user:\i,widgets:.{0,100}}\),/,
-                replace: "$&$self.renderProfileSongs(arguments[0]),",
+                match: /user:(\i),widgets:.{0,100}}\),/,
+                replace: "$&$self.renderProfileSongs({user:$1}),",
             },
         },
         // Message and member list popout (lazy loaded)
         {
             find: '"UserProfilePopout");',
             replacement: {
-                match: /user:\i,widgets:.{0,100}?\}\),/,
-                replace: "$&$self.renderProfileSongs(arguments[0]),",
+                match: /user:(\i),widgets:.{0,100}?\}\),/,
+                replace: "$&$self.renderProfileSongs({user:$1}),",
             },
         },
         // DM sidebar
         {
             find: ".SIDEBAR,disableToolbar:",
             replacement: {
-                match: /user:\i,widgets:.{0,100}?\}\),(?=.{0,200}#{intl::USER_PROFILE_WISHLIST})/,
-                replace: "$&$self.renderProfileSongs({...arguments[0],isSideBar:true}),",
+                match: /user:(\i),widgets:.{0,100}?\}\),(?=.{0,300}?#{intl::USER_PROFILE_WISHLIST})/,
+                replace: "$&$self.renderProfileSongs({user:$1,isSideBar:true}),",
             },
         },
         // Full profile modal sections (lazy loaded)
@@ -73,12 +72,6 @@ export default definePlugin({
         },
     },
     start() {
-        // the cache lives in native.ts so it persists between reloads and
-        // only gets cleared on full restart. we don't want that since
-        // audio preview URLs expire very fast, so we just clear it on
-        // plugin restart instead
-        Native.clearCache();
-
         useSongStore.getState().$refresh();
         useAuthorizationStore.persist.rehydrate();
     },

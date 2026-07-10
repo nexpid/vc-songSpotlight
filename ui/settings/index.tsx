@@ -10,9 +10,19 @@ import ErrorBoundary from "@components/ErrorBoundary";
 import { Flex } from "@components/Flex";
 import { copyWithToast } from "@utils/discord";
 import { RenderModalProps } from "@vencord/discord-types";
-import { Alerts, Modal, openModal, Parser, showToast, Toasts, useCallback, useEffect, useMemo, useRef, useState } from "@webpack/common";
-
-import { services } from "../../api/dist/handlers";
+import {
+    Alerts,
+    Modal,
+    openModal,
+    Parser,
+    showToast,
+    Toasts,
+    useCallback,
+    useEffect,
+    useMemo,
+    useRef,
+    useState,
+} from "@webpack/common";
 import { UserData } from "../../api/dist/structs";
 import { sid } from "../../api/dist/util";
 import { apiConstants, deleteData, getData, saveData } from "../../lib/api";
@@ -234,7 +244,7 @@ export default function Settings({ templateData }: SettingsProps) {
     );
 }
 
-export function SettingsModal({ modalProps, ...props }: SettingsProps & { modalProps: RenderModalProps; }) {
+export function SettingsModal({ modalProps, ...props }: SettingsProps & { modalProps: RenderModalProps }) {
     return (
         <ErrorBoundary>
             <Modal {...modalProps} size="lg" title="Song Spotlight">
