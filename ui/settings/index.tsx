@@ -16,13 +16,14 @@ import {
     openModal,
     Parser,
     showToast,
-    Toasts,
     useCallback,
     useEffect,
     useMemo,
     useRef,
     useState,
 } from "@webpack/common";
+
+import { services } from "../../api/dist/handlers";
 import { UserData } from "../../api/dist/structs";
 import { sid } from "../../api/dist/util";
 import { apiConstants, deleteData, getData, saveData } from "../../lib/api";
@@ -51,7 +52,7 @@ function ImportButton({ overwrite, pending, setPending, onImport }: ImportButton
             json = JSON.parse(await readClipboard());
         } catch {
             setPending(false);
-            return showToast("No JSON in clipboard!", Toasts.Type.FAILURE);
+            return showToast({ text: "No JSON in clipboard!", variant: "critical" });
         }
 
         // cant use UserDataSchema here sadly
@@ -79,18 +80,18 @@ function ImportButton({ overwrite, pending, setPending, onImport }: ImportButton
 
         if (!data) {
             setPending(false);
-            return showToast("Invalid Song Spotlight data in clipboard!", Toasts.Type.FAILURE);
+            return showToast({ text: "Invalid Song Spotlight data in clipboard!", variant: "critical" });
         }
 
         const validated = await Promise.allSettled(data.map(song => Native.validateSong(song)));
         if (!validated.every(x => x.status === "fulfilled" && x.value)) {
             setPending(false);
-            return showToast("One or more imported songs were invalid.", Toasts.Type.FAILURE);
+            return showToast({ text: "One or more imported songs were invalid.", variant: "critical" });
         }
 
         onImport(data);
         setPending(false);
-        showToast("Imported songs from clipboard!", Toasts.Type.SUCCESS);
+        showToast({ text: "Imported songs from clipboard!", variant: "success" });
     }, [pending]);
 
     return (
@@ -187,7 +188,7 @@ export default function Settings({ templateData }: SettingsProps) {
                                     setPending(true);
                                     try {
                                         await saveData(localData);
-                                        showToast("Successfully saved songs!", Toasts.Type.SUCCESS);
+                                        showToast({ text: "Successfully saved songs!", variant: "success" });
                                     } finally {
                                         setPending(false);
                                     }
@@ -207,7 +208,7 @@ export default function Settings({ templateData }: SettingsProps) {
                         variant="dangerPrimary"
                         onClick={() => {
                             deleteTokens();
-                            showToast("Successfully signed out!", Toasts.Type.SUCCESS);
+                            showToast({ text: "Successfully signed out!", variant: "success" });
                         }}
                         disabled={pending}
                     >
@@ -225,7 +226,7 @@ export default function Settings({ templateData }: SettingsProps) {
                                         await deleteData();
                                         deleteTokens();
 
-                                        showToast("Successfully deleted songs!", Toasts.Type.SUCCESS);
+                                        showToast({ text: "Successfully deleted songs!", variant: "success" });
                                     } finally {
                                         setPending(false);
                                     }
@@ -244,7 +245,7 @@ export default function Settings({ templateData }: SettingsProps) {
     );
 }
 
-export function SettingsModal({ modalProps, ...props }: SettingsProps & { modalProps: RenderModalProps }) {
+export function SettingsModal({ modalProps, ...props }: SettingsProps & { modalProps: RenderModalProps; }) {
     return (
         <ErrorBoundary>
             <Modal {...modalProps} size="lg" title="Song Spotlight">

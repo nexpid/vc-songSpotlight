@@ -8,11 +8,11 @@ import { BaseText } from "@components/index";
 import { classes } from "@utils/index";
 import { User } from "@vencord/discord-types";
 import {
+    openUserProfileModal,
     SelectedChannelStore,
     SelectedGuildStore,
     useEffect,
     useMemo,
-    UserProfileActions,
     useState,
 } from "@webpack/common";
 
@@ -60,14 +60,14 @@ export default function CollapsedProfileSongs({ data, user, isSideBar }: Collaps
                         tabIndex={0}
                         onClick={() => {
                             const guildId = SelectedGuildStore.getGuildId();
-                            UserProfileActions.openUserProfileModal({
+                            openUserProfileModal({
                                 userId,
                                 guildId,
                                 channelId: SelectedChannelStore.getChannelId(),
-                                analyticsLocation: {
-                                    page: guildId ? "Guild Channel" : "DM Channel",
-                                    section: "Profile Popout",
-                                },
+                                sourceAnalyticsLocations: [
+                                    "username",
+                                    "user profile popout",
+                                ],
                                 tabSection: "SONG_SPOTLIGHT",
                             });
                         }}

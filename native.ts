@@ -17,6 +17,7 @@ Object.assign(CspPolicies, {
     "dc.songspotlight.nexpid.xyz": ConnectSrc, // Song Spotlight API
     "*.scdn.co": MediaSrc, // Spotify cover art/audio preview CDN
     "*.sndcdn.com": MediaSrc, // Soundcloud cover art/audio preview CDN
+    "playback.media-streaming.soundcloud.cloud": MediaSrc, // Soundcloud audio preview CDN
     "*.mzstatic.com": ImageSrc, // Apple Music cover art CDN
     "audio-ssl.itunes.apple.com": MediaSrc, // Apple Music audio preview CDN
     "*.tidal.com": MediaSrc, // Tidal cover art/audio preview CDN

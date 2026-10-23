@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
-import { showToast, Toasts, useCallback, useEffect, useMemo, useRef } from "@webpack/common";
+import { showToast, useCallback, useEffect, useMemo, useRef } from "@webpack/common";
 import { RefObject } from "react";
 
 import { RenderInfoEntry, RenderInfoEntryAudio } from "../../api/dist/handlers";
@@ -106,7 +106,7 @@ export default function AudioPlayer({ audioRef, list, playing, setPlaying, setLo
                 node.currentTime = audio.previewStart ? audio.previewStart / 1000 : 0;
                 node.volume = BASE_VOLUME * (settings.store.previewVolume / 100);
                 node.play().catch(error => {
-                    showToast("Failed to play song preview!", Toasts.Type.FAILURE);
+                    showToast({ text: "Failed to play song preview!", variant: "critical" });
                     logger.error("Failed to play audio", error);
                     setPlaying(undefined);
                 });
